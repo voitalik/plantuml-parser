@@ -1,7 +1,6 @@
 package com.shuzijun.plantumlparser.core;
 
 import com.github.javaparser.ParserConfiguration;
-import com.intellij.openapi.project.Project;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -39,16 +38,6 @@ public class ParserConfig {
     private boolean showComment = false;
 
     private boolean showConstantValues = false;
-
-    public Project getProject() {
-        return project;
-    }
-
-    public void setProject(Project project) {
-        this.project = project;
-    }
-
-    private Project project;
 
     private ParserConfiguration.LanguageLevel languageLevel = ParserConfiguration.LanguageLevel.JAVA_8;
 

@@ -1,7 +1,6 @@
 plugins {
-    id 'java'
+    id 'java-library'
     id 'maven-publish'
-    id 'org.jetbrains.kotlin.jvm' version '1.9.10'
 }
 
 group 'com.shuzijun'
@@ -16,7 +15,6 @@ dependencies {
     api "com.github.javaparser:javaparser-core:3.25.3"
 
     api "commons-io:commons-io:2.8.0"
-    api "org.jetbrains.kotlin:kotlin-compiler"
 }
 
 tasks.withType(JavaCompile) {
