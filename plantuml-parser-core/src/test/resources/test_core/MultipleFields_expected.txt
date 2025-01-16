@@ -1,0 +1,9 @@
+@startuml
+class MultipleFields {
+	- x: int
+	- y: int
+	# hello: String
+	# bye: String
+	# greet: String
+}
+@enduml

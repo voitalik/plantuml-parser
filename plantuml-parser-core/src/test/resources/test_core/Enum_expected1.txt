@@ -1,0 +1,10 @@
+@startuml
+enum Enum {
+	+ A
+	+ B
+	+ C
+	+ D
+	- value: String
+	- Enum(val: String)
+}
+@enduml

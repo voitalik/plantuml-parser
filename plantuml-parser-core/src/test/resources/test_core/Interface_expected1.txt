@@ -1,0 +1,11 @@
+@startuml
+interface Interface {
+	+ {static} EXPLICIT: String
+	+ {static} IMPLICIT: String
+	+ {static} PI_CONST: double
+	+ {abstract} abstractMethod(param: String, d: double): void
+}
+note left of Interface::"abstractMethod(param: String, d: double)"
+ This is a comment.
+end note
+@enduml

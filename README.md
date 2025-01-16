@@ -1,5 +1,22 @@
 # PlantUML generator for Java
 
+**Changes made to the CLI and core logic**
+
+_UPD. 09-01-2025_
+1. **Fix**: Set public visibility for constants in interfaces.
+2. **Fix**: Add the `abstract` modifier for methods in interfaces that lack modifiers and a body.
+3. **Fix**: Prevent the creation of default constructors for interfaces.
+4. **Fix**: Correct the display of comments on methods.
+5. **Fix**: Set private visibility for enum constructors by default.
+6. **Fix**: Remove the colon (":") after enum values.
+7. **Fix**: Handle multiple fields declared with the same type, e.g., `int x, y;`.
+8. **Add**: Introduced the `-scval` option to output constant (static final) values.
+9. **Add**: Introduced the `-fall` and `-mall` options:
+    - `-fall` behaves like `-fpri -fdef -fpro -fpub`.
+    - Similarly, `-mall` applies to methods.
+
+---
+
 This is a fork used by `ctp`, checkout [its repos](https://github.com/samuelroland/ctp) to use this !
 
 **Changes made to the CLI and core logic**  

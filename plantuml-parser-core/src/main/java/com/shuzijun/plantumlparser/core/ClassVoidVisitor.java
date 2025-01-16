@@ -13,6 +13,7 @@ import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -26,9 +27,14 @@ public class ClassVoidVisitor extends VoidVisitorAdapter<PUml> implements MyVisi
 
     private final ParserConfig parserConfig;
 
+    private final Map<String, String> importMap;
+
+    private PUmlView pUmlView;
+
     public ClassVoidVisitor(String packageName, ParserConfig parserConfig) {
         this.packageName = packageName;
         this.parserConfig = parserConfig;
+        importMap = new HashMap<>();
     }
 
     @Override
@@ -40,7 +46,7 @@ public class ClassVoidVisitor extends VoidVisitorAdapter<PUml> implements MyVisi
         if (parserConfig.isExcludeClass(cORid.getNameAsString())){
             return;
         }
-        PUmlView pUmlView = (PUmlView) pUml;
+        pUmlView = (PUmlView) pUml;
         PUmlClass pUmlClass = createUmlClass();
 
         pUmlClass.setClassName(cORid.getNameAsString());
@@ -62,6 +68,8 @@ public class ClassVoidVisitor extends VoidVisitorAdapter<PUml> implements MyVisi
             });
         }
 
+        fillImports(cORid, pUmlClass);
+
         cORid.getFields().forEach(p -> p.accept(this, pUmlClass));
 
         if (cORid.getConstructors().isEmpty() && parserConfig.isShowDefaultConstructors() && !cORid.isInterface()) {
@@ -75,53 +83,37 @@ public class ClassVoidVisitor extends VoidVisitorAdapter<PUml> implements MyVisi
 
         pUmlView.addPUmlClass(pUmlClass);
 
-        Node node = cORid.getParentNode().get();
+        addRelation(cORid.getImplementedTypes(), pUmlClass, "<|..");
+        addRelation(cORid.getExtendedTypes(), pUmlClass, "<|--");
 
-        NodeList<ImportDeclaration> importDeclarations = parseImport(node, pUmlClass, pUmlView);
-
-        Map<String, String> importMap = new HashMap<>();
-        if (importDeclarations != null) {
-            for (ImportDeclaration importDeclaration : importDeclarations) {
-                importMap.put(importDeclaration.getName().getIdentifier(), importDeclaration.getName().toString());
-            }
-        }
-        if (cORid.getImplementedTypes().size() != 0) {
-            for (ClassOrInterfaceType implementedType : cORid.getImplementedTypes()) {
-                PUmlRelation pUmlRelation = new PUmlRelation();
-                pUmlRelation.setTarget(getPackageNamePrefix(pUmlClass.getPackageName()) + pUmlClass.getClassName());
-                if (importMap.containsKey(implementedType.getNameAsString())) {
-                    if (parserConfig.isShowPackage()) {
-                        pUmlRelation.setSource(importMap.get(implementedType.getNameAsString()));
-                    } else {
-                        pUmlRelation.setSource(implementedType.getNameAsString());
-                    }
-                } else {
-                    pUmlRelation.setSource(getPackageNamePrefix(pUmlClass.getPackageName()) + implementedType.getNameAsString());
-                }
-                pUmlRelation.setRelation("<|..");
-                pUmlView.addPUmlRelation(pUmlRelation);
-            }
-        }
-
-        if (cORid.getExtendedTypes().size() != 0) {
-            for (ClassOrInterfaceType extendedType : cORid.getExtendedTypes()) {
-                PUmlRelation pUmlRelation = new PUmlRelation();
-                pUmlRelation.setTarget(getPackageNamePrefix(pUmlClass.getPackageName()) + pUmlClass.getClassName());
-                if (importMap.containsKey(extendedType.getNameAsString())) {
-                    if (parserConfig.isShowPackage()) {
-                        pUmlRelation.setSource(importMap.get(extendedType.getNameAsString()));
-                    } else {
-                        pUmlRelation.setSource(extendedType.getNameAsString());
-                    }
-                } else {
-                    pUmlRelation.setSource(getPackageNamePrefix(pUmlClass.getPackageName()) + extendedType.getNameAsString());
-                }
-                pUmlRelation.setRelation("<|--");
-                pUmlView.addPUmlRelation(pUmlRelation);
-
-            }
-        }
         super.visit(cORid, pUml);
+    }
+
+    private void fillImports(Node cORid, PUmlClass pUmlClass) {
+        Optional<Node> parentNode = cORid.getParentNode();
+        parentNode.flatMap(node -> parseImport(node, pUmlClass))
+                .ifPresent(list -> list.forEach(
+                        importDeclaration -> importMap.put(importDeclaration.getName().getIdentifier(),
+                        importDeclaration.getName().toString())));
+    }
+
+    private void addRelation(NodeList<ClassOrInterfaceType> types, PUmlClass pUmlClass, String relation) {
+        types.forEach(type -> {
+            String typeName = type.getNameAsString();
+            PUmlRelation pUmlRelation = new PUmlRelation();
+            pUmlRelation.setTarget(getPackageNamePrefix(pUmlClass.getPackageName()) + pUmlClass.getClassName());
+            if (importMap.containsKey(typeName)) {
+                if (parserConfig.isShowPackage()) {
+                    pUmlRelation.setSource(importMap.get(typeName));
+                } else {
+                    pUmlRelation.setSource(typeName);
+                }
+            } else {
+                pUmlRelation.setSource(getPackageNamePrefix(pUmlClass.getPackageName()) + typeName);
+            }
+            pUmlRelation.setRelation(relation);
+            pUmlView.addPUmlRelation(pUmlRelation);
+        });
     }
 
     @Override
@@ -130,7 +122,7 @@ public class ClassVoidVisitor extends VoidVisitorAdapter<PUml> implements MyVisi
             super.visit(enumDeclaration, pUml);
             return;
         }
-        PUmlView pUmlView = (PUmlView) pUml;
+        pUmlView = (PUmlView) pUml;
         PUmlClass pUmlClass = createUmlClass();
 
         pUmlClass.setClassName(enumDeclaration.getNameAsString());
@@ -142,12 +134,17 @@ public class ClassVoidVisitor extends VoidVisitorAdapter<PUml> implements MyVisi
             });
         }
 
+        fillImports(enumDeclaration, pUmlClass);
+
         enumDeclaration.getEntries().forEach(p -> p.accept(this, pUmlClass));
         enumDeclaration.getFields().forEach(p -> p.accept(this, pUmlClass));
         enumDeclaration.getConstructors().forEach(p -> p.accept(this, pUmlClass));
         enumDeclaration.getMethods().forEach(p -> p.accept(this, pUmlClass));
 
         pUmlView.addPUmlClass(pUmlClass);
+
+        addRelation(enumDeclaration.getImplementedTypes(), pUmlClass, "<|..");
+
         super.visit(enumDeclaration, pUml);
     }
 
@@ -157,7 +154,7 @@ public class ClassVoidVisitor extends VoidVisitorAdapter<PUml> implements MyVisi
             super.visit(recordDeclaration, pUml);
             return;
         }
-        PUmlView pUmlView = (PUmlView) pUml;
+        pUmlView = (PUmlView) pUml;
         PUmlClass pUmlClass = createUmlClass();
 
         pUmlClass.setClassName(recordDeclaration.getNameAsString());
@@ -168,6 +165,8 @@ public class ClassVoidVisitor extends VoidVisitorAdapter<PUml> implements MyVisi
                 pUmlClass.setClassComment(comment.getContent());
             });
         }
+
+        fillImports(recordDeclaration, pUmlClass);
 
         // Create a constructor unless a default constructor was provided.
         boolean needsDefaultConstructor = recordDeclaration.getConstructors().stream().noneMatch(c ->
@@ -215,8 +214,9 @@ public class ClassVoidVisitor extends VoidVisitorAdapter<PUml> implements MyVisi
         }
 
         pUmlView.addPUmlClass(pUmlClass);
-        Node node = recordDeclaration.getParentNode().get();
-        parseImport(node, pUmlClass, pUmlView);
+
+        addRelation(recordDeclaration.getImplementedTypes(), pUmlClass, "<|..");
+
         super.visit(recordDeclaration, pUml);
     }
 
@@ -247,6 +247,12 @@ public class ClassVoidVisitor extends VoidVisitorAdapter<PUml> implements MyVisi
             }
             pUmlClass.addPUmlFieldList(pUmlField);
         }
+
+        // TODO: Add fields relation as Aggregation
+        // Do I need to add only classes/interfaces that belong to the project? Do not add standard classes
+        // like String, Long, List??? How to handle generics? Map<String, PUmlClass>, add all three or
+        // only PUmlClass
+        // field.getElementType().ifClassOrInterfaceType( type -> addRelation(new NodeList<>(type), pUmlClass, "o--"));
     }
 
     /**
@@ -435,9 +441,9 @@ public class ClassVoidVisitor extends VoidVisitorAdapter<PUml> implements MyVisi
         }
     }
 
-    private NodeList<ImportDeclaration> parseImport(Node node, PUmlClass pUmlClass, PUmlView pUmlView) {
-        if (node instanceof CompilationUnit) {
-            return ((CompilationUnit) node).getImports();
+    private Optional<NodeList<ImportDeclaration>> parseImport(Node node, PUmlClass pUmlClass) {
+        if (node instanceof CompilationUnit cu) {
+            return Optional.ofNullable(cu.getImports());
         } else if (node instanceof ClassOrInterfaceDeclaration || node instanceof RecordDeclaration) {
             pUmlClass.setClassName(((TypeDeclaration<?>) node).getNameAsString() + "$" + pUmlClass.getClassName());
 
@@ -449,9 +455,9 @@ public class ClassVoidVisitor extends VoidVisitorAdapter<PUml> implements MyVisi
                 pUmlRelation.setRelation("+--");	// Fixed: Intern class should have an association of +-- not +..
                 pUmlView.addPUmlRelation(pUmlRelation);
             }
-            parseImport(parentNode, pUmlClass, pUmlView);
+            parseImport(parentNode, pUmlClass);
         }
-        return null;
+        return Optional.empty();
     }
 
 
