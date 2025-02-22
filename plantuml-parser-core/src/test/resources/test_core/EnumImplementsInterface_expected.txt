@@ -1,0 +1,8 @@
+@startuml
+enum EnumImplementsInterface {
+	+ TEST
+	+ close(): void
+}
+
+AutoCloseable <|.. EnumImplementsInterface
+@enduml

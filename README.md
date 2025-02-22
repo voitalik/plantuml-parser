@@ -14,7 +14,8 @@ _UPD. 09-01-2025_
 9. **Add**: Introduced the `-fall` and `-mall` options:
     - `-fall` behaves like `-fpri -fdef -fpro -fpub`.
     - Similarly, `-mall` applies to methods.
-
+10. **Add**: Displaying relations for enums and records that implement interfaces.
+11. **Add**: JUnit tests to test the provided changes.
 ---
 
 This is a fork used by `ctp`, checkout [its repos](https://github.com/samuelroland/ctp) to use this !
