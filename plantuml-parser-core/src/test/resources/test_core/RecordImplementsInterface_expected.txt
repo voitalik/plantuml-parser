@@ -1,0 +1,13 @@
+@startuml
+class CircleRecord {
+	- r: double
+	- x: int
+	- y: int
+	+ close(): void
+	+ r(): double
+	+ x(): int
+	+ y(): int
+}
+
+AutoCloseable <|.. CircleRecord
+@enduml

@@ -90,6 +90,26 @@ public class TestCore {
     }
 
     @Test
+    @DisplayName("Display relation for enum that implements interface")
+    void testEnumImplementsInterface() throws Exception {
+        ParserConfig parserConfig = new ParserConfig();
+        parserConfig.setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17);
+        parserConfig.addFieldModifier("*");
+        parserConfig.addMethodModifier("*");
+        runTest(parserConfig, "EnumImplementsInterface.java", "EnumImplementsInterface_expected.txt");
+    }
+
+    @Test
+    @DisplayName("Display relation for record that implements interface")
+    void testRecordImplementsInterface() throws Exception {
+        ParserConfig parserConfig = new ParserConfig();
+        parserConfig.setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17);
+        parserConfig.addFieldModifier("*");
+        parserConfig.addMethodModifier("*");
+        runTest(parserConfig, "CircleRecord.java", "RecordImplementsInterface_expected.txt");
+    }
+
+    @Test
     @DisplayName("Handle multiple fields")
     void testMultipleFields() throws Exception {
         ParserConfig parserConfig = new ParserConfig();

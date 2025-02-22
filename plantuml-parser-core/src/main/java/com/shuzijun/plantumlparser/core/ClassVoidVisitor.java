@@ -68,6 +68,11 @@ public class ClassVoidVisitor extends VoidVisitorAdapter<PUml> implements MyVisi
             });
         }
 
+        // Imports must be filled before traversing class fields if we want to
+        // add associations, compositions, or aggregations for fields or methods,
+        // because we need access to the import declarations when checking the fields/methods.
+        // Without this option, we could move the call to fillImports right above the addRelation call.
+        // For now, I have not added this functionality, but will leave the call to fillImports here.
         fillImports(cORid, pUmlClass);
 
         cORid.getFields().forEach(p -> p.accept(this, pUmlClass));
