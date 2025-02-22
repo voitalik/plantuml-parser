@@ -12,6 +12,7 @@ import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -191,7 +192,7 @@ public class ClassVoidVisitor extends VoidVisitorAdapter<PUml> implements MyVisi
         }
 
         // We need to convert the parameters to private final instance variables.
-        Set<Parameter> parameters = new HashSet<>();
+        Set<Parameter> parameters = new LinkedHashSet<>();
         recordDeclaration.getParameters().forEach(p -> {
             parameters.add(p);
             NodeList<Modifier> modifiers = new NodeList<>();
