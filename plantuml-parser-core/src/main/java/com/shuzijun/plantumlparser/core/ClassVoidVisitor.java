@@ -11,7 +11,6 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -186,12 +185,14 @@ public class ClassVoidVisitor extends VoidVisitorAdapter<PUml> implements MyVisi
                     break;
                 }
             }
-            ConstructorDeclaration c = new ConstructorDeclaration(modifiers, pUmlClass.getClassName());
+            ConstructorDeclaration c = new ConstructorDeclaration(modifiers, recordDeclaration.getNameAsString());
             c.setParameters(recordDeclaration.getParameters());
             c.accept(this, pUmlClass);
         }
 
         // We need to convert the parameters to private final instance variables.
+        // Use LinkedHashSet to maintain the order of the record's parameters. It allows getters
+        // to be created in the same order as the parameters appear in the record declaration.
         Set<Parameter> parameters = new LinkedHashSet<>();
         recordDeclaration.getParameters().forEach(p -> {
             parameters.add(p);
@@ -207,8 +208,8 @@ public class ClassVoidVisitor extends VoidVisitorAdapter<PUml> implements MyVisi
         for (BodyDeclaration<?> m: recordDeclaration.getMembers()) {
             if (m instanceof MethodDeclaration) {
                 MethodDeclaration md = (MethodDeclaration) m;
-                Parameter parm = new Parameter(md.getType(), md.getName());
-                parameters.remove(parm);
+                Parameter param = new Parameter(md.getType(), md.getName());
+                parameters.remove(param);
             }
             m.accept(this, pUmlClass);
         }
@@ -450,7 +451,7 @@ public class ClassVoidVisitor extends VoidVisitorAdapter<PUml> implements MyVisi
     private Optional<NodeList<ImportDeclaration>> parseImport(Node node, PUmlClass pUmlClass) {
         if (node instanceof CompilationUnit cu) {
             return Optional.ofNullable(cu.getImports());
-        } else if (node instanceof ClassOrInterfaceDeclaration || node instanceof RecordDeclaration) {
+        } else if (node instanceof TypeDeclaration<?>) {
             pUmlClass.setClassName(((TypeDeclaration<?>) node).getNameAsString() + "$" + pUmlClass.getClassName());
 
             Node parentNode = node.getParentNode().get();
